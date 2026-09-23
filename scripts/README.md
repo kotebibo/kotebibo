@@ -12,10 +12,21 @@ GITHUB_TOKEN=$(gh auth token) node scripts/generate.mjs   # refreshes it
 ```
 
 GitHub strips `<script>` and sanitises CSS in READMEs, but it renders SVGs embedded via `<img>`
-and runs their SMIL animations — so all the motion (the typing line, the portrait scan-in, the
-timeline rail drawing itself) lives inside the SVG. Nothing is fetched at view time.
+and runs their SMIL animations — so all the motion (the typing line, the portrait scanning in
+row by row) lives inside the SVG. Nothing is fetched at view time.
 
 A GitHub Action reruns this daily and commits the result only if it changed.
+
+### Why the canvas is small
+
+The card is rendered at `width="100%"`, so it scales to the README column — roughly 890px on a
+desktop. **A smaller canvas therefore renders larger type**, not smaller: at 620 units wide
+every element appears ~1.4x the size it would at 880.
+
+That is the whole reason the card carries so little text. Each line costs height, height costs
+width-per-unit, and width-per-unit is legibility. Detail belongs in the README prose directly
+underneath, where it can be as long as it likes and is selectable, searchable and linkable.
+If you add a row here, expect to take one out.
 
 ### The contribution grid is currently off
 

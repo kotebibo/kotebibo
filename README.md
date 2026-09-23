@@ -41,6 +41,10 @@ payments integration with SQL-side attribution, and GPS-verified site check-ins.
 pays for them with x402-style micropayments inside a bounded budget. Took 3rd place and the
 People's Favorite vote at a 3-hour hackathon, then rebuilt solo at the Solana Startup Village.
 
+**Track record** — `2023` BTU, CS bachelor's · `May 2025` DataMind, intern · `Sep 2025`
+GeoSafety, RouteHub · `Jul 2026` Mercato, hackathon 3rd place · `Aug 2026` SieveWorks, live on
+devnet in 3 weeks
+
 ---
 
 ### Stack

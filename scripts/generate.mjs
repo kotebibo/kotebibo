@@ -193,76 +193,29 @@ function mesh(x, y, weeks) {
   return { svg: out, width: last.length * (CELL + GAP) - GAP, height: 7 * (CELL + GAP) - GAP };
 }
 
-/** Milestones, evenly spaced. Real dates carry the chronology, not the x axis. */
-const TRACK = [
-  ["2023", "BTU", "CS bachelor's"],
-  ["MAY 2025", "DATAMIND", "Intern · audit logs"],
-  ["SEP 2025", "GEOSAFETY", "RouteHub · led ~70%"],
-  ["JUL 2026", "MERCATO", "Hackathon 3rd place"],
-  ["AUG 2026", "SIEVEWORKS", "3 weeks · on devnet"],
-];
-
-function timeline(x, y, width) {
-  const step = width / (TRACK.length - 1);
-  let out = "";
-
-  // the rail draws itself left to right
-  out +=
-    `<line x1="${x}" y1="${y}" x2="${x + width}" y2="${y}" stroke="${C.ruleStrong}" stroke-width="1" ` +
-    `stroke-dasharray="${width}" stroke-dashoffset="${width}">` +
-    `<animate attributeName="stroke-dashoffset" from="${width}" to="0" dur="1.1s" begin="1.5s" fill="freeze"/>` +
-    `</line>`;
-
-  TRACK.forEach(([when, what, note], i) => {
-    const cx = x + i * step;
-    const begin = (1.7 + i * 0.16).toFixed(2);
-    const current = i === 2;
-    // first hugs the left edge, last hugs the right, the rest centre on their
-    // node — otherwise the final two labels run into each other
-    const anchor = i === 0 ? "start" : i === TRACK.length - 1 ? "end" : "middle";
-    const tx = cx;
-
-    out +=
-      `<rect x="${(cx - 3.5).toFixed(1)}" y="${y - 3.5}" width="7" height="7" ` +
-      `fill="${current ? C.accent : C.bg}" stroke="${current ? C.accent : C.ruleStrong}" opacity="0">` +
-      `<animate attributeName="opacity" from="0" to="1" dur="0.3s" begin="${begin}s" fill="freeze"/>` +
-      `</rect>`;
-
-    const g =
-      `<text x="${tx}" y="${y + 20}" text-anchor="${anchor}" font-family="${MONO}" font-size="8.5" ` +
-      `font-weight="500" letter-spacing="1.6" fill="${C.faint}">${esc(when)}</text>` +
-      `<text x="${tx}" y="${y + 36}" text-anchor="${anchor}" font-family="${MONO}" font-size="11.5" ` +
-      `font-weight="700" letter-spacing="0.3" fill="${current ? C.accent : C.ink}">${esc(what)}</text>` +
-      `<text x="${tx}" y="${y + 51}" text-anchor="${anchor}" font-family="${MONO}" font-size="9.5" ` +
-      `fill="${C.dim}">${esc(note)}</text>`;
-
-    out += `<g opacity="0">${g}<animate attributeName="opacity" from="0" to="1" dur="0.45s" begin="${begin}s" fill="freeze"/></g>`;
-  });
-
-  return { svg: out, height: 58 };
-}
-
 /* ------------------------------------------------------------------ *
  * Card
  * ------------------------------------------------------------------ */
 
+/**
+ * The card is the headline, not the CV.
+ *
+ * Everything here is also written out in the README directly below it, so the
+ * card only keeps what has to land in one glance — and keeping it short is what
+ * lets the canvas be small, which is what makes the type render large. Detail
+ * belongs in the prose underneath.
+ */
 const FACTS = [
-  ["NOW", "RouteHub — field-operations platform @ GeoSafety"],
-  ["BUILDING", "SieveWorks — verifiable distributed compute on Solana"],
-  ["STACK", "TypeScript · PostgreSQL · Rust/Anchor · WebAssembly"],
-  ["LOCAL", "Tbilisi, Georgia · GMT+4"],
-];
-
-const BLURB = [
-  "I own systems end to end: schema, migrations, auth,",
-  "payments, CI and deployment. Led a production multi-tenant",
-  "platform for a year; ship solo products in weeks.",
+  ["NOW", "RouteHub @ GeoSafety"],
+  ["BUILDING", "SieveWorks on Solana"],
+  ["STACK", "TS · Postgres · Rust"],
+  ["LOCAL", "Tbilisi · GMT+4"],
 ];
 
 const METRICS = [
-  ["700+", "COMMITS LED"],
+  ["700+", "COMMITS"],
   ["483", "RLS POLICIES"],
-  ["1,200+", "TESTS IN CI"],
+  ["1,200+", "TESTS"],
   ["150+", "MIGRATIONS"],
 ];
 
@@ -271,24 +224,29 @@ async function main() {
   const cal = await contributions();
   const days = streak(cal.weeks ?? []);
 
-  const W = 880;
-  const PAD = 26;
-  const BAR = 30;
+  // The card is scaled to the README's column width, so a *smaller* canvas
+  // renders *larger* type. 620 against GitHub's ~890px column is roughly 1.4x
+  // the apparent size of an 880-wide card — which is why the content above is
+  // kept to the headline.
+  const W = 620;
+  const PAD = 22;
+  const BAR = 28;
 
-  const PORTRAIT_X = PAD + 4;
-  const PORTRAIT_Y = BAR + 34;
-  const PORTRAIT_H = 34 * LINE_H;
+  // sized so the portrait and the text column end at the same height
+  const COLS = 33;
+  const ROWS = 26;
+  const PORTRAIT_X = PAD + 2;
+  const PORTRAIT_Y = BAR + 26;
+  const PORTRAIT_H = ROWS * LINE_H;
 
-  const COL = PORTRAIT_X + 43 * CH_W + 34;
+  const COL = PORTRAIT_X + COLS * CH_W + 26;
 
-  const bodyBottom = Math.max(PORTRAIT_Y + PORTRAIT_H, BAR + 300);
-  const METRIC_Y = bodyBottom + 26;
-  const METRIC_H = 54;
-  const MESH_Y = METRIC_Y + METRIC_H + (SHOW_MESH ? 30 : 42);
-  const m = SHOW_MESH
-    ? mesh(PAD + 4, MESH_Y, cal.weeks ?? [])
-    : timeline(PAD + 6, MESH_Y, W - PAD * 2 - 12);
-  const H = Math.round(MESH_Y + m.height + 34);
+  const bodyBottom = Math.max(PORTRAIT_Y + PORTRAIT_H, BAR + 240);
+  const METRIC_Y = bodyBottom + 22;
+  const METRIC_H = 52;
+  const MESH_Y = METRIC_Y + METRIC_H + 34;
+  const m = SHOW_MESH ? mesh(PAD + 2, MESH_Y, cal.weeks ?? []) : null;
+  const H = Math.round(m ? MESH_Y + m.height + 26 : METRIC_Y + METRIC_H + 22);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -301,37 +259,28 @@ async function main() {
   s += `<text x="${W - PAD}" y="${BAR - 11}" text-anchor="end" font-family="${MONO}" font-size="9.5" font-weight="500" letter-spacing="1.6" fill="${C.faint}">BUILD ${today}</text>`;
 
   // portrait
-  s += portrait(PORTRAIT_X, PORTRAIT_Y + 10);
+  s += portrait(PORTRAIT_X, PORTRAIT_Y + 8);
 
   // name
-  let y = PORTRAIT_Y + 34;
-  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="34" font-weight="700" letter-spacing="-1.2" fill="${C.ink}">KONSTANTINE</text>`;
-  y += 38;
-  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="34" font-weight="700" letter-spacing="-1.2" fill="${C.accent}">BIBILAURI</text>`;
+  let y = PORTRAIT_Y + 32;
+  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="33" font-weight="700" letter-spacing="-1.5" fill="${C.ink}">KONSTANTINE</text>`;
+  y += 36;
+  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="33" font-weight="700" letter-spacing="-1.5" fill="${C.accent}">BIBILAURI</text>`;
 
   y += 22;
   s += `<line x1="${COL}" y1="${y}" x2="${W - PAD}" y2="${y}" stroke="${C.rule}"/>`;
 
-  y += 26;
+  y += 27;
   // ASCII arrow, not "→": a wide glyph throws off the monospace advance the
   // caret position is computed from, and parks the cursor past the text
-  s += typed(COL, y, "> full-stack engineer · schema -> deploy", 12.5, C.ink, 0.9, "t1");
+  s += typed(COL, y, "> full-stack engineer", 14, C.ink, 0.9, "t1");
 
   // facts
-  y += 30;
+  y += 32;
   for (const [k, v] of FACTS) {
-    s += label(COL, y, k, C.faint, 9, 500, "1.8");
-    s += body(COL + 86, y, v, C.dim, 11.5);
-    y += 21;
-  }
-
-  // prose — balances the column against the portrait's height
-  y += 8;
-  s += `<line x1="${COL}" y1="${y}" x2="${W - PAD}" y2="${y}" stroke="${C.rule}"/>`;
-  y += 22;
-  for (const line of BLURB) {
-    s += body(COL, y, line, C.dim, 11, 400);
-    y += 17;
+    s += label(COL, y, k, C.faint, 9.5, 500, "1.6");
+    s += body(COL + 82, y, v, C.dim, 12.5);
+    y += 25;
   }
 
   // metrics strip
@@ -339,22 +288,21 @@ async function main() {
   s += `<line x1="${PAD}" y1="${METRIC_Y + METRIC_H}" x2="${W - PAD}" y2="${METRIC_Y + METRIC_H}" stroke="${C.rule}"/>`;
   const cellW = (W - PAD * 2) / METRICS.length;
   METRICS.forEach(([value, name], i) => {
-    const mx = PAD + i * cellW + 16;
+    const mx = PAD + i * cellW + 13;
     if (i > 0) {
       s += `<line x1="${PAD + i * cellW}" y1="${METRIC_Y}" x2="${PAD + i * cellW}" y2="${METRIC_Y + METRIC_H}" stroke="${C.rule}"/>`;
     }
-    s += `<text x="${mx}" y="${METRIC_Y + 26}" font-family="${MONO}" font-size="19" font-weight="700" fill="${C.accent}">${esc(value)}</text>`;
-    s += label(mx, METRIC_Y + 42, name, C.faint, 8.5, 500, "1.6");
+    s += `<text x="${mx}" y="${METRIC_Y + 27}" font-family="${MONO}" font-size="21" font-weight="700" fill="${C.accent}">${esc(value)}</text>`;
+    s += label(mx, METRIC_Y + 42, name, C.faint, 9, 500, "1.4");
   });
 
-  // track record (or the contribution grid, when it is worth showing)
-  const heading = SHOW_MESH ? "CONTRIBUTIONS · 52 WEEKS" : "TRACK RECORD";
-  const right = SHOW_MESH
-    ? `${cal.totalContributions ?? 0} TOTAL${days > 1 ? `  ·  ${days} DAY STREAK` : ""}`
-    : "OPEN TO WORK";
-  s += label(PAD + 6, MESH_Y - 22, heading, C.faint, 8.5, 500, "2");
-  s += `<text x="${W - PAD - 6}" y="${MESH_Y - 22}" text-anchor="end" font-family="${MONO}" font-size="8.5" font-weight="500" letter-spacing="2" fill="${C.accent}">${esc(right)}</text>`;
-  s += m.svg;
+  // contribution grid, once it is worth showing
+  if (m) {
+    const right = `${cal.totalContributions ?? 0} TOTAL${days > 1 ? `  ·  ${days} DAY STREAK` : ""}`;
+    s += label(PAD + 2, MESH_Y - 18, "CONTRIBUTIONS · 52 WEEKS", C.faint, 9, 500, "1.8");
+    s += `<text x="${W - PAD - 2}" y="${MESH_Y - 18}" text-anchor="end" font-family="${MONO}" font-size="9" font-weight="500" letter-spacing="1.8" fill="${C.accent}">${esc(right)}</text>`;
+    s += m.svg;
+  }
 
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" ` +
