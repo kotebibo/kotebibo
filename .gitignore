@@ -1,0 +1,7 @@
+node_modules/
+package.json
+package-lock.json
+shot.mjs
+
+# the source headshot stays local — only the ASCII render is published
+assets/portrait-source.*
