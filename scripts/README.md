@@ -53,7 +53,7 @@ Turn the setting on, then flip the flag. Everything else is already wired up.
 One-off. Only rerun when the photo changes.
 
 ```bash
-node scripts/portrait.mjs path/to/headshot.jpg --cols 43 --rows 34 --crop 390:510:80:50
+node scripts/portrait.mjs assets/portrait-source.jpg --cols 40 --rows 24 --crop 390:390:80:50
 ```
 
 Decoding goes through `ffmpeg` to raw grayscale, so there's no image library to install. A
@@ -65,4 +65,13 @@ glyph ramp.
 `--crop` is `w:h:x:y` in source pixels. Pick the grid so `cols/rows ≈ (crop_w/crop_h) × 1.67`,
 since a character cell is roughly 0.6 as wide as it is tall.
 
-The source photo is gitignored — only the ASCII render is published.
+### Crop square to the face, not head-and-shoulders
+
+Columns are detail; rows are height. A tall head-and-shoulders crop forces a tall, narrow grid,
+so making the portrait bigger means *dropping columns* to stay inside the card — a larger blur
+rather than a better portrait. Cropping square to the face inverts that: 40 columns of detail
+fit in **less** vertical space than 32 did on the tall crop.
+
+Cell size and cell count are separate dials. `PFONT` in `generate.mjs` scales the cells;
+`--cols`/`--rows` re-samples the grid. Change one without the other and you get either a blur
+or a shrink — move both together.

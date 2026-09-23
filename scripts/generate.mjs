@@ -112,24 +112,25 @@ function streak(weeks) {
  * Pieces
  * ------------------------------------------------------------------ */
 
-const CH_W = 5.42;
-const LINE_H = 9;
+/** Advance width of one monospace glyph, as a fraction of font size. */
+const CH_RATIO = 0.602;
 
-function portrait(x, y) {
+function portrait(x, y, size) {
   if (!existsSync("assets/portrait.txt")) return "";
+  const ch = size * CH_RATIO;
   const rows = readFileSync("assets/portrait.txt", "utf8").replace(/\n$/, "").split("\n");
   return rows
     .map((row, i) => {
       if (!row.trim()) return "";
       // textLength pins each row's advance width, so the grid stays square even
       // where the viewer has no real monospace font.
-      const w = (row.length * CH_W).toFixed(1);
-      const delay = (0.35 + i * 0.022).toFixed(3);
+      const w = (row.length * ch).toFixed(1);
+      const delay = (0.35 + i * 0.024).toFixed(3);
       return (
-        `<text x="${x}" y="${(y + i * LINE_H).toFixed(1)}" textLength="${w}" lengthAdjust="spacing" ` +
-        `xml:space="preserve" font-family="${MONO}" font-size="9" fill="${C.ink}" opacity="0">` +
+        `<text x="${x}" y="${(y + i * size).toFixed(1)}" textLength="${w}" lengthAdjust="spacing" ` +
+        `xml:space="preserve" font-family="${MONO}" font-size="${size}" fill="${C.ink}" opacity="0">` +
         `${esc(row)}` +
-        `<animate attributeName="opacity" from="0" to="0.82" dur="0.5s" begin="${delay}s" fill="freeze"/>` +
+        `<animate attributeName="opacity" from="0" to="0.85" dur="0.5s" begin="${delay}s" fill="freeze"/>` +
         `</text>`
       );
     })
@@ -232,16 +233,22 @@ async function main() {
   const PAD = 22;
   const BAR = 28;
 
-  // sized so the portrait and the text column end at the same height
-  const COLS = 33;
-  const ROWS = 26;
+  // Cell size, not cell count, is what makes the portrait bigger — the grid is
+  // re-sampled to match so it gains detail rather than just scaling up. Rows
+  // are chosen so the portrait and the text column finish at the same height.
+  // A square crop of the face, not head-and-shoulders: the tall crop forced a
+  // tall, narrow grid, which meant trading columns (detail) for height. Square
+  // buys 40 columns of detail in less vertical space than 32 columns did.
+  const PFONT = 11.5;
+  const COLS = 40;
+  const ROWS = 24;
   const PORTRAIT_X = PAD + 2;
   const PORTRAIT_Y = BAR + 26;
-  const PORTRAIT_H = ROWS * LINE_H;
+  const PORTRAIT_H = ROWS * PFONT;
 
-  const COL = PORTRAIT_X + COLS * CH_W + 26;
+  const COL = PORTRAIT_X + COLS * PFONT * CH_RATIO + 26;
 
-  const bodyBottom = Math.max(PORTRAIT_Y + PORTRAIT_H, BAR + 240);
+  const bodyBottom = Math.max(PORTRAIT_Y + PORTRAIT_H, BAR + 260);
   const METRIC_Y = bodyBottom + 22;
   const METRIC_H = 52;
   const MESH_Y = METRIC_Y + METRIC_H + 34;
@@ -259,28 +266,28 @@ async function main() {
   s += `<text x="${W - PAD}" y="${BAR - 11}" text-anchor="end" font-family="${MONO}" font-size="9.5" font-weight="500" letter-spacing="1.6" fill="${C.faint}">BUILD ${today}</text>`;
 
   // portrait
-  s += portrait(PORTRAIT_X, PORTRAIT_Y + 8);
+  s += portrait(PORTRAIT_X, PORTRAIT_Y + PFONT, PFONT);
 
   // name
-  let y = PORTRAIT_Y + 32;
-  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="33" font-weight="700" letter-spacing="-1.5" fill="${C.ink}">KONSTANTINE</text>`;
-  y += 36;
-  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="33" font-weight="700" letter-spacing="-1.5" fill="${C.accent}">BIBILAURI</text>`;
+  let y = PORTRAIT_Y + 36;
+  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="35" font-weight="700" letter-spacing="-1.6" fill="${C.ink}">KONSTANTINE</text>`;
+  y += 42;
+  s += `<text x="${COL}" y="${y}" font-family="${MONO}" font-size="35" font-weight="700" letter-spacing="-1.6" fill="${C.accent}">BIBILAURI</text>`;
 
-  y += 22;
+  y += 26;
   s += `<line x1="${COL}" y1="${y}" x2="${W - PAD}" y2="${y}" stroke="${C.rule}"/>`;
 
-  y += 27;
+  y += 32;
   // ASCII arrow, not "→": a wide glyph throws off the monospace advance the
   // caret position is computed from, and parks the cursor past the text
-  s += typed(COL, y, "> full-stack engineer", 14, C.ink, 0.9, "t1");
+  s += typed(COL, y, "> full-stack engineer", 15, C.ink, 0.9, "t1");
 
   // facts
-  y += 32;
+  y += 36;
   for (const [k, v] of FACTS) {
-    s += label(COL, y, k, C.faint, 9.5, 500, "1.6");
-    s += body(COL + 82, y, v, C.dim, 12.5);
-    y += 25;
+    s += label(COL, y, k, C.faint, 10, 500, "1.6");
+    s += body(COL + 88, y, v, C.dim, 13);
+    y += 32;
   }
 
   // metrics strip
