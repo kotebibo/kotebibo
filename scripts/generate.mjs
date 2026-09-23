@@ -213,13 +213,6 @@ const FACTS = [
   ["LOCAL", "Tbilisi · GMT+4"],
 ];
 
-const METRICS = [
-  ["700+", "COMMITS"],
-  ["483", "RLS POLICIES"],
-  ["1,200+", "TESTS"],
-  ["150+", "MIGRATIONS"],
-];
-
 async function main() {
   mkdirSync("assets", { recursive: true });
   const cal = await contributions();
@@ -249,11 +242,9 @@ async function main() {
   const COL = PORTRAIT_X + COLS * PFONT * CH_RATIO + 26;
 
   const bodyBottom = Math.max(PORTRAIT_Y + PORTRAIT_H, BAR + 260);
-  const METRIC_Y = bodyBottom + 22;
-  const METRIC_H = 52;
-  const MESH_Y = METRIC_Y + METRIC_H + 34;
+  const MESH_Y = bodyBottom + 48;
   const m = SHOW_MESH ? mesh(PAD + 2, MESH_Y, cal.weeks ?? []) : null;
-  const H = Math.round(m ? MESH_Y + m.height + 26 : METRIC_Y + METRIC_H + 22);
+  const H = Math.round(m ? MESH_Y + m.height + 26 : bodyBottom + 26);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -289,19 +280,6 @@ async function main() {
     s += body(COL + 88, y, v, C.dim, 13);
     y += 32;
   }
-
-  // metrics strip
-  s += `<line x1="${PAD}" y1="${METRIC_Y}" x2="${W - PAD}" y2="${METRIC_Y}" stroke="${C.rule}"/>`;
-  s += `<line x1="${PAD}" y1="${METRIC_Y + METRIC_H}" x2="${W - PAD}" y2="${METRIC_Y + METRIC_H}" stroke="${C.rule}"/>`;
-  const cellW = (W - PAD * 2) / METRICS.length;
-  METRICS.forEach(([value, name], i) => {
-    const mx = PAD + i * cellW + 13;
-    if (i > 0) {
-      s += `<line x1="${PAD + i * cellW}" y1="${METRIC_Y}" x2="${PAD + i * cellW}" y2="${METRIC_Y + METRIC_H}" stroke="${C.rule}"/>`;
-    }
-    s += `<text x="${mx}" y="${METRIC_Y + 27}" font-family="${MONO}" font-size="21" font-weight="700" fill="${C.accent}">${esc(value)}</text>`;
-    s += label(mx, METRIC_Y + 42, name, C.faint, 9, 500, "1.4");
-  });
 
   // contribution grid, once it is worth showing
   if (m) {
